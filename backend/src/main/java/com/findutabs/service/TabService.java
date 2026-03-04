@@ -3,6 +3,7 @@ package com.findutabs.service;
 import com.findutabs.dto.request.CreateTabRequest;
 import com.findutabs.dto.response.TabResponse;
 import com.findutabs.exception.ResourceNotFoundException;
+import com.findutabs.exception.UnauthorizedException;
 import com.findutabs.model.Tab;
 import com.findutabs.model.User;
 import com.findutabs.repository.TabRepository;
@@ -88,7 +89,7 @@ public class TabService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tab not found with id: " + id));
 
         if (!tab.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("You don't have permission to delete this tab");
+            throw new UnauthorizedException("You don't have permission to delete this tab");
         }
 
         tabRepository.delete(tab);
