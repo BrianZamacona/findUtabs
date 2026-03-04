@@ -27,9 +27,9 @@ const PLATFORM_LABELS: Record<Platform, string> = {
 export function detectSource(url: string): DetectedSource {
   const trimmed = url.trim();
 
-  // YouTube: youtube.com/watch?v=ID or youtu.be/ID
+  // YouTube: youtube.com/watch?v=ID or youtu.be/ID (handles extra query params)
   const youtubeMatch =
-    trimmed.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/) ||
+    trimmed.match(/youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})/) ||
     trimmed.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
   if (youtubeMatch) {
     const trackId = youtubeMatch[1];

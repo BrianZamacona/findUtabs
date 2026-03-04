@@ -59,9 +59,10 @@ public class TranscriptionService {
 
         if (existingSong.isPresent()) {
             song = existingSong.get();
-            transcription = song.getTranscriptions().isEmpty()
-                    ? null
-                    : song.getTranscriptions().get(0);
+            // Reuse the most recently created transcription to avoid duplication
+            transcription = song.getTranscriptions().stream()
+                    .max(java.util.Comparator.comparing(t -> t.getCreatedAt() != null ? t.getCreatedAt() : java.time.LocalDateTime.MIN))
+                    .orElse(null);
 
             if (transcription == null) {
                 transcription = createNewTranscription(song, request);
@@ -130,7 +131,7 @@ public class TranscriptionService {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(normalized.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash).substring(0, 64);
+            return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
             log.error("SHA-256 algorithm not available", e);
             return null;

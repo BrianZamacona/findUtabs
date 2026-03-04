@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { detectSource, getTranscriptionWarning, DetectedSource } from '@/lib/sourceDetector';
-import type { CreateTranscriptionRequest, TranscriptionResponse } from '@/types/transcription';
+import type { CreateTranscriptionRequest, TranscriptionResponse, SourceType } from '@/types/transcription';
 import Link from 'next/link';
 
 export default function TranscribePage() {
@@ -44,7 +44,7 @@ export default function TranscribePage() {
 
     const body: CreateTranscriptionRequest = {
       sourceUrl: url.trim(),
-      sourceType: (detectedSource.platform === 'UNKNOWN' ? 'URL' : detectedSource.platform) as import('@/types/transcription').SourceType,
+      sourceType: (detectedSource.platform === 'UNKNOWN' ? 'URL' : detectedSource.platform) as SourceType,
       rightsConfirmed,
       isPublic,
     };
