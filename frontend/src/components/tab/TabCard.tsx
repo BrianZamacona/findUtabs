@@ -9,7 +9,7 @@ interface TabCardProps {
 
 export function TabCard({ tab }: TabCardProps) {
   return (
-    <Link href={`/tab/${tab.id}`}>
+    <Link href={`/tabs/${tab.id}`}>
       <Card className="hover:shadow-lg transition-shadow cursor-pointer">
         <CardHeader>
           <CardTitle className="text-lg">{tab.title}</CardTitle>
