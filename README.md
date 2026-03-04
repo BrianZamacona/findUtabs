@@ -1,6 +1,6 @@
 # 🎸 findUtabs - Guitar Tablatures Platform
 
-A modern, full-stack web application for discovering, sharing, and learning guitar tablatures. Built with Spring Boot 4.0.1 and Next.js 16.1.
+A modern, full-stack web application for discovering, sharing, and learning guitar tablatures. Built with Spring Boot 3.4.3 and Next.js 15.2.
 
 [![Backend CI](https://github.com/BrianZamacona/findUtabs/workflows/Backend%20CI/badge.svg)](https://github.com/BrianZamacona/findUtabs/actions)
 [![Frontend CI](https://github.com/BrianZamacona/findUtabs/workflows/Frontend%20CI/badge.svg)](https://github.com/BrianZamacona/findUtabs/actions)
@@ -8,7 +8,7 @@ A modern, full-stack web application for discovering, sharing, and learning guit
 ## 🚀 Tech Stack
 
 ### Backend
-- **Spring Boot 4.0.1** - Latest stable release
+- **Spring Boot 3.4.3** - Latest stable release with Java 21 LTS
 - **Java 21** - LTS version
 - **PostgreSQL 16** - Primary database
 - **Redis 7** - Caching layer
@@ -17,9 +17,12 @@ A modern, full-stack web application for discovering, sharing, and learning guit
 - **JWT** - Token-based authentication
 - **Flyway** - Database migrations
 - **Swagger/OpenAPI** - API documentation
+- **Spring Actuator** - Health checks and metrics
+- **Resilience4j** - Circuit breaker for external AI API calls
+- **Bucket4j** - Rate limiting
 
 ### Frontend
-- **Next.js 16.1** - React framework with Turbopack
+- **Next.js 15.2** - React framework with Turbopack
 - **React 19** - UI library
 - **TypeScript 5.7+** - Type safety
 - **TailwindCSS** - Utility-first CSS
@@ -104,15 +107,23 @@ findUtabs/
    cd findUtabs
    ```
 
-2. **Start all services**
+2. **Copy `.env.example` to `.env` and fill in your values**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration (database password, JWT secret, etc.)
+   ```
+
+3. **Start all services**
    ```bash
    docker-compose up -d
    ```
 
-3. **Access the application**
+4. **Access the application**
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8080
    - Swagger UI: http://localhost:8080/swagger-ui.html
+   - API Docs (JSON): http://localhost:8080/v3/api-docs
+   - Health Check: http://localhost:8080/actuator/health
 
 #### Option 2: Manual Setup
 

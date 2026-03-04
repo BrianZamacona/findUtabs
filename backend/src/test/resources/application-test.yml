@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   datasource:
     url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
@@ -16,9 +18,10 @@ spring:
   cache:
     type: none
 
-jwt:
-  secret: test-secret-key-for-testing-must-be-at-least-256-bits-long-test-secret-key
-  expiration: 86400000
+app:
+  jwt:
+    secret: test-secret-key-for-testing-must-be-at-least-256-bits-long-test-secret-key
+    expiration-ms: 86400000
 
 logging:
   level:

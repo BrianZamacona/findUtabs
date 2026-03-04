@@ -5,15 +5,15 @@ services:
     image: postgres:16-alpine
     container_name: findutabs-postgres
     environment:
-      POSTGRES_DB: findutabs
-      POSTGRES_USER: findutabs
-      POSTGRES_PASSWORD: findutabs123
+      POSTGRES_DB: ${DB_NAME:-findutabs}
+      POSTGRES_USER: ${DB_USERNAME:-findutabs}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-findutabs123}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U findutabs"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-findutabs}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,16 +41,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: findutabs-backend
+    env_file:
+      - .env
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: findutabs
-      DB_USERNAME: findutabs
-      DB_PASSWORD: findutabs123
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production-must-be-at-least-256-bits-long
     ports:
       - "8080:8080"
     depends_on:
@@ -68,7 +64,7 @@ services:
       dockerfile: Dockerfile
     container_name: findutabs-frontend
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080/api
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api}
     ports:
       - "3000:3000"
     depends_on:
