@@ -20,9 +20,15 @@ export function Header() {
           <Link href="/browse">
             <Button variant="ghost">Browse</Button>
           </Link>
+          <Link href="/library">
+            <Button variant="ghost">Library</Button>
+          </Link>
 
           {isAuthenticated ? (
             <>
+              <Link href="/tabs/create">
+                <Button variant="ghost">Create Tab</Button>
+              </Link>
               <Link href="/profile">
                 <Button variant="ghost">Profile</Button>
               </Link>
