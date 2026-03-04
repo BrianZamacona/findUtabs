@@ -1,0 +1,10 @@
+fastapi==0.110.0
+uvicorn==0.27.1
+python-multipart==0.0.22
+pydantic==2.6.3
+
+# Phase 3 ML dependencies (heavy - uncomment when AI pipeline is implemented):
+# basic-pitch==0.3.2          # TODO: Spotify's pitch detection model
+# demucs==4.0.1               # TODO: Meta's source separation
+# madmom==0.16.1              # TODO: Beat/tempo tracking
+# librosa==0.10.1             # TODO: General audio analysis

@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+venv/
+
+# Temporary audio files
+audio_tmp/
+*.mp3
+*.wav
+*.flac
+*.ogg
+*.m4a

@@ -53,7 +53,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/tabs/public/**").permitAll()
+                        .requestMatchers("/api/transcriptions/library").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/transcriptions/**").permitAll()
+                        .requestMatchers("/api/dmca/report").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/transcriptions").authenticated()
+                        .requestMatchers("/api/transcriptions/my-library").authenticated()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
