@@ -1,5 +1,7 @@
 package com.findutabs.service;
 
+import com.findutabs.exception.DuplicateResourceException;
+import com.findutabs.exception.ResourceNotFoundException;
 import com.findutabs.dto.request.LoginRequest;
 import com.findutabs.dto.request.RegisterRequest;
 import com.findutabs.dto.response.AuthResponse;
@@ -27,11 +29,11 @@ public class AuthService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new DuplicateResourceException("Username already exists");
         }
         
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new DuplicateResourceException("Email already exists");
         }
 
         User user = new User();
@@ -61,7 +63,7 @@ public class AuthService {
         String jwt = tokenProvider.generateToken(authentication);
 
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return new AuthResponse(jwt, user.getId(), user.getUsername(), user.getEmail(), user.getRole());
     }
