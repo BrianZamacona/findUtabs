@@ -47,6 +47,7 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       DB_HOST: postgres
       DB_PORT: 5432
+      AI_SERVICE_URL: http://ai-service:8000
     ports:
       - "8080:8080"
     depends_on:
@@ -54,6 +55,24 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - findutabs-network
+    restart: unless-stopped
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: findutabs-ai
+    ports:
+      - "8000:8000"
+    volumes:
+      - audio_tmp:/tmp/audio
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - findutabs-network
     restart: unless-stopped
@@ -76,6 +95,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  audio_tmp:
 
 networks:
   findutabs-network:

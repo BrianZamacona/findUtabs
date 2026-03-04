@@ -46,6 +46,18 @@ public class Song {
     @Column(name = "audio_file_path")
     private String audioFilePath;
 
+    @Size(max = 64)
+    @Column(name = "source_fingerprint", unique = true, length = 64)
+    private String sourceFingerprint;
+
+    @Column(name = "is_public")
+    @Builder.Default
+    private Boolean isPublic = true;
+
+    @Column(name = "play_count")
+    @Builder.Default
+    private Integer playCount = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -63,6 +75,6 @@ public class Song {
     private LocalDateTime updatedAt;
 
     public enum SourceType {
-        YOUTUBE, SPOTIFY, TIDAL, FILE_UPLOAD, URL
+        YOUTUBE, SPOTIFY, TIDAL, SOUNDCLOUD, FILE_UPLOAD, URL
     }
 }
