@@ -5,6 +5,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Music, Shield } from 'lucide-react';
 
+function SupportButton() {
+  return (
+    <Link href="/support">
+      <Button variant="ghost" className="text-orange-500" aria-label="Support Us">
+        <span aria-hidden="true">☕</span> Support
+      </Button>
+    </Link>
+  );
+}
+
 export function Header() {
   const { isAuthenticated, user, logout } = useAuth();
 
@@ -40,9 +50,7 @@ export function Header() {
                   </Button>
                 </Link>
               )}
-              <Link href="/support">
-                <Button variant="ghost" className="text-orange-500" aria-label="Support Us"><span aria-hidden="true">☕</span> Support</Button>
-              </Link>
+              <SupportButton />
               <span className="text-sm text-muted-foreground hidden sm:block">
                 {user?.username}
               </span>
@@ -52,9 +60,7 @@ export function Header() {
             </>
           ) : (
             <>
-              <Link href="/support">
-                <Button variant="ghost" className="text-orange-500" aria-label="Support Us"><span aria-hidden="true">☕</span> Support</Button>
-              </Link>
+              <SupportButton />
               <Link href="/login">
                 <Button variant="ghost">Login</Button>
               </Link>
