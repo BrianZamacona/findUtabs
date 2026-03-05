@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Music } from 'lucide-react';
+import { Music, Shield } from 'lucide-react';
 
 export function Header() {
   const { isAuthenticated, user, logout } = useAuth();
@@ -16,7 +16,7 @@ export function Header() {
           findUtabs
         </Link>
 
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-2 flex-wrap">
           <Link href="/browse">
             <Button variant="ghost">Browse</Button>
           </Link>
@@ -32,7 +32,18 @@ export function Header() {
               <Link href="/profile">
                 <Button variant="ghost">Profile</Button>
               </Link>
-              <span className="text-sm text-muted-foreground">
+              {user?.role === 'ADMIN' && (
+                <Link href="/admin">
+                  <Button variant="ghost" className="text-orange-600">
+                    <Shield className="h-4 w-4 mr-1" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
+              <Link href="/support">
+                <Button variant="ghost" className="text-orange-500">☕ Support</Button>
+              </Link>
+              <span className="text-sm text-muted-foreground hidden sm:block">
                 {user?.username}
               </span>
               <Button variant="outline" onClick={logout}>
@@ -41,6 +52,9 @@ export function Header() {
             </>
           ) : (
             <>
+              <Link href="/support">
+                <Button variant="ghost" className="text-orange-500">☕ Support</Button>
+              </Link>
               <Link href="/login">
                 <Button variant="ghost">Login</Button>
               </Link>

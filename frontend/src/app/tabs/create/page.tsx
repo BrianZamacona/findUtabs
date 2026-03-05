@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/hooks/useAuth';
 import { useCreateTab } from '@/hooks/useTabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Difficulty } from '@/types/tab';
 import { useRouter } from 'next/navigation';
+
+const AlphaTabViewer = dynamic(
+  () => import('@/components/viewer/AlphaTabViewer').then((m) => m.AlphaTabViewer),
+  { ssr: false, loading: () => <div className="p-2 text-sm text-muted-foreground">Loading preview...</div> },
+);
 
 export default function CreateTabPage() {
   const { isAuthenticated } = useAuth();
@@ -20,6 +26,9 @@ export default function CreateTabPage() {
   const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.BEGINNER);
   const [tuning, setTuning] = useState('');
   const [fileUrl, setFileUrl] = useState('');
+  const [alphaTexData, setAlphaTexData] = useState('');
+  const [previewData, setPreviewData] = useState('');
+  const [previewTimer, setPreviewTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -27,10 +36,17 @@ export default function CreateTabPage() {
     }
   }, [isAuthenticated, router]);
 
+  const handleAlphaTexChange = (value: string) => {
+    setAlphaTexData(value);
+    if (previewTimer) clearTimeout(previewTimer);
+    const timer = setTimeout(() => setPreviewData(value), 500);
+    setPreviewTimer(timer);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createTab.mutate(
-      { title, artist, difficulty, tuning: tuning || undefined, fileUrl: fileUrl || undefined },
+      { title, artist, difficulty, tuning: tuning || undefined, fileUrl: fileUrl || undefined, alphaTexData: alphaTexData || undefined },
       {
         onSuccess: (tab) => {
           router.push(`/tabs/${tab.id}`);
@@ -101,6 +117,22 @@ export default function CreateTabPage() {
                 placeholder="https://example.com/tab.gp5"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="alphaTexData">AlphaTex Data (optional)</Label>
+              <textarea
+                id="alphaTexData"
+                value={alphaTexData}
+                onChange={(e) => handleAlphaTexChange(e.target.value)}
+                className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                placeholder="Enter AlphaTex format tablature..."
+              />
+            </div>
+            {previewData && (
+              <div>
+                <p className="text-sm font-medium mb-2">Preview</p>
+                <AlphaTabViewer scoreData={previewData} title="Preview" />
+              </div>
+            )}
 
             {createTab.error && (
               <p className="text-sm text-destructive">
