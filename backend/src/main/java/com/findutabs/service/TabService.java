@@ -1,5 +1,6 @@
 package com.findutabs.service;
 
+import com.findutabs.config.CacheConfig;
 import com.findutabs.dto.request.CreateTabRequest;
 import com.findutabs.dto.request.TabRatingRequest;
 import com.findutabs.dto.request.UpdateTabRequest;
@@ -19,6 +20,9 @@ import com.findutabs.repository.TabVersionRepository;
 import com.findutabs.repository.UserFavoriteRepository;
 import com.findutabs.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -41,6 +45,7 @@ public class TabService {
     private final UserFavoriteRepository userFavoriteRepository;
 
     @Transactional
+    @CacheEvict(value = CacheConfig.CACHE_TABS_PAGE, allEntries = true)
     public TabResponse createTab(CreateTabRequest request, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -60,6 +65,10 @@ public class TabService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = CacheConfig.CACHE_TABS_DETAIL, key = "#tabId"),
+        @CacheEvict(value = CacheConfig.CACHE_TABS_PAGE, allEntries = true)
+    })
     public TabResponse updateTab(Long tabId, UpdateTabRequest request, String username) {
         Tab tab = tabRepository.findById(tabId)
                 .orElseThrow(() -> new ResourceNotFoundException("Tab not found with id: " + tabId));
@@ -93,6 +102,7 @@ public class TabService {
         return mapToTabResponse(tab);
     }
 
+    @Cacheable(value = CacheConfig.CACHE_TABS_DETAIL, key = "#id")
     public TabResponse getTabById(Long id) {
         Tab tab = tabRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tab not found with id: " + id));
@@ -108,6 +118,7 @@ public class TabService {
         return mapToTabResponse(tab);
     }
 
+    @Cacheable(value = CacheConfig.CACHE_TABS_PAGE, key = "'page_' + #pageable.pageNumber + '_' + #pageable.pageSize + '_' + #pageable.sort")
     public Page<TabResponse> getAllTabs(Pageable pageable) {
         return tabRepository.findAll(pageable).map(this::mapToTabResponse);
     }
@@ -134,6 +145,10 @@ public class TabService {
     }
 
     @Transactional
+    @Caching(evict = {
+        @CacheEvict(value = CacheConfig.CACHE_TABS_DETAIL, key = "#id"),
+        @CacheEvict(value = CacheConfig.CACHE_TABS_PAGE, allEntries = true)
+    })
     public void deleteTab(Long id, String username) {
         Tab tab = tabRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tab not found with id: " + id));

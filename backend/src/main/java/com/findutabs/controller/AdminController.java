@@ -1,5 +1,7 @@
 package com.findutabs.controller;
 
+import com.findutabs.dto.response.ApiResponse;
+import com.findutabs.dto.response.ApiResponse.PaginationMeta;
 import com.findutabs.dto.response.UserResponse;
 import com.findutabs.model.DmcaReport;
 import com.findutabs.service.AdminService;
@@ -11,10 +13,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -29,58 +32,60 @@ public class AdminController {
     @GetMapping("/stats")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get admin statistics")
-    public ResponseEntity<Map<String, Long>> getStats() {
-        return ResponseEntity.ok(adminService.getStats());
+    public ApiResponse<Map<String, Long>> getStats() {
+        return ApiResponse.ok(adminService.getStats());
     }
 
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all users (paginated)")
-    public ResponseEntity<Page<UserResponse>> getUsers(
+    public ApiResponse<List<UserResponse>> getUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ResponseEntity.ok(adminService.getUsers(pageable));
+        Page<UserResponse> result = adminService.getUsers(pageable);
+        return ApiResponse.paginated(result.getContent(), PaginationMeta.of(result));
     }
 
     @DeleteMapping("/users/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a user")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public void deleteUser(@PathVariable Long id) {
         adminService.deleteUser(id);
-        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/users/{id}/ban")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Ban or unban a user")
-    public ResponseEntity<UserResponse> banUser(@PathVariable Long id) {
-        return ResponseEntity.ok(adminService.banUser(id));
+    public ApiResponse<UserResponse> banUser(@PathVariable Long id) {
+        return ApiResponse.ok(adminService.banUser(id));
     }
 
     @GetMapping("/dmca-reports")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get DMCA reports (paginated)")
-    public ResponseEntity<Page<DmcaReport>> getDmcaReports(
+    public ApiResponse<List<DmcaReport>> getDmcaReports(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ResponseEntity.ok(adminService.getDmcaReports(pageable));
+        Page<DmcaReport> result = adminService.getDmcaReports(pageable);
+        return ApiResponse.paginated(result.getContent(), PaginationMeta.of(result));
     }
 
     @PutMapping("/dmca-reports/{id}/action")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Take action on a DMCA report")
-    public ResponseEntity<DmcaReport> actionDmcaReport(@PathVariable Long id,
-                                                        @RequestParam String action) {
-        return ResponseEntity.ok(adminService.actionDmcaReport(id, action));
+    public ApiResponse<DmcaReport> actionDmcaReport(@PathVariable Long id,
+                                                     @RequestParam String action) {
+        return ApiResponse.ok(adminService.actionDmcaReport(id, action));
     }
 
     @DeleteMapping("/tabs/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Delete a tab (admin moderation)")
-    public ResponseEntity<Void> deleteTab(@PathVariable Long id) {
+    public void deleteTab(@PathVariable Long id) {
         adminService.deleteTab(id);
-        return ResponseEntity.noContent().build();
     }
 }

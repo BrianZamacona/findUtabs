@@ -1,10 +1,12 @@
 package com.findutabs.service;
 
+import com.findutabs.config.CacheConfig;
 import com.findutabs.dto.response.UserResponse;
 import com.findutabs.exception.ResourceNotFoundException;
 import com.findutabs.model.User;
 import com.findutabs.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,7 @@ public class UserService {
         return mapToUserResponse(user);
     }
 
+    @Cacheable(value = CacheConfig.CACHE_USERS, key = "#username")
     public UserResponse getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));

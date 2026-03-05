@@ -1,114 +1,127 @@
 package com.findutabs.exception;
 
+import com.findutabs.dto.response.ApiError;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 
-import java.net.URI;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ProblemDetail> handleResourceNotFound(ResourceNotFoundException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        problem.setTitle("Resource Not Found");
-        problem.setType(URI.create("https://findutabs.com/errors/not-found"));
-        problem.setProperty("timestamp", Instant.now());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+    // ── Helpers ──────────────────────────────────────────────────
+
+    private String traceId() {
+        return Optional.ofNullable(MDC.get("traceId")).orElse("no-trace");
     }
 
-    @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ProblemDetail> handleDuplicate(DuplicateResourceException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
-        problem.setTitle("Duplicate Resource");
-        problem.setType(URI.create("https://findutabs.com/errors/conflict"));
-        problem.setProperty("timestamp", Instant.now());
-        problem.setProperty("errorCode", ex.getErrorCode());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+    private long durationMs() {
+        String start = MDC.get("requestStart");
+        if (start == null) return -1;
+        return System.currentTimeMillis() - Long.parseLong(start);
     }
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ProblemDetail> handleBusinessException(BusinessException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
-        problem.setTitle("Business Rule Violation");
-        problem.setType(URI.create("https://findutabs.com/errors/business-rule"));
-        problem.setProperty("timestamp", Instant.now());
-        problem.setProperty("errorCode", ex.getErrorCode());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
+    private String requestContext(HttpServletRequest req) {
+        String clientIp = MDC.get("clientIp");
+        String username = MDC.get("username");
+        return String.format("method=%s path=%s ip=%s user=%s traceId=%s durationMs=%d",
+                req.getMethod(),
+                req.getRequestURI(),
+                clientIp != null ? clientIp : "unknown",
+                username != null ? username : "anonymous",
+                traceId(),
+                durationMs());
     }
 
-    @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<ProblemDetail> handleUnauthorized(UnauthorizedException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
-        problem.setTitle("Unauthorized");
-        problem.setType(URI.create("https://findutabs.com/errors/unauthorized"));
-        problem.setProperty("timestamp", Instant.now());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+    // ── 4xx handlers (log.warn — client's fault, no stack trace) ─
+
+    @ExceptionHandler(AppException.class)
+    public ApiError handleAppException(AppException ex, HttpServletRequest req, HttpServletResponse res) {
+        res.setStatus(ex.getHttpStatus().value());
+        log.warn("[{}] {} | errorCode={} | internalDetail={}",
+                ex.getHttpStatus().value(),
+                requestContext(req),
+                ex.getErrorCode(),
+                ex.getInternalDetail());
+
+        return ApiError.of(
+                ex.getHttpStatus().value(),
+                ex.getErrorCode(),
+                ex.getMessage(),
+                traceId());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ProblemDetail> handleValidation(MethodArgumentNotValidException ex) {
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleValidation(MethodArgumentNotValidException ex, HttpServletRequest req) {
         Map<String, String> fieldErrors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String message = error.getDefaultMessage();
-            fieldErrors.put(fieldName, message);
+            String field = ((FieldError) error).getField();
+            fieldErrors.put(field, error.getDefaultMessage());
         });
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
-        problem.setTitle("Validation Error");
-        problem.setType(URI.create("https://findutabs.com/errors/validation"));
-        problem.setProperty("timestamp", Instant.now());
-        problem.setProperty("fieldErrors", fieldErrors);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
+
+        log.warn("[400] {} | errorCode=VALIDATION_ERROR | fields={}",
+                requestContext(req), fieldErrors);
+
+        return ApiError.validation(fieldErrors, traceId());
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ProblemDetail> handleBadCredentials(BadCredentialsException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Invalid username or password");
-        problem.setTitle("Authentication Failed");
-        problem.setType(URI.create("https://findutabs.com/errors/unauthorized"));
-        problem.setProperty("timestamp", Instant.now());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
-    }
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ApiError handleBadCredentials(BadCredentialsException ex, HttpServletRequest req) {
+        log.warn("[401] {} | errorCode=UNAUTHORIZED | internalDetail=Bad credentials for attempted login",
+                requestContext(req));
 
-    @ExceptionHandler(UsernameNotFoundException.class)
-    public ResponseEntity<ProblemDetail> handleUsernameNotFound(UsernameNotFoundException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        problem.setTitle("Resource Not Found");
-        problem.setType(URI.create("https://findutabs.com/errors/not-found"));
-        problem.setProperty("timestamp", Instant.now());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+        return ApiError.of(401, AppErrorCode.UNAUTHORIZED,
+                "Invalid username or password", traceId());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ProblemDetail> handleAccessDenied(AccessDeniedException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Access denied");
-        problem.setTitle("Access Denied");
-        problem.setType(URI.create("https://findutabs.com/errors/forbidden"));
-        problem.setProperty("timestamp", Instant.now());
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problem);
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiError handleAccessDenied(AccessDeniedException ex, HttpServletRequest req) {
+        log.warn("[403] {} | errorCode=FORBIDDEN | internalDetail={}",
+                requestContext(req), ex.getMessage());
+
+        return ApiError.of(403, AppErrorCode.FORBIDDEN,
+                "You do not have permission to perform this action", traceId());
     }
 
+    @ExceptionHandler({AsyncRequestTimeoutException.class, RequestTimeoutException.class})
+    @ResponseStatus(HttpStatus.REQUEST_TIMEOUT)
+    public ApiError handleTimeout(Exception ex, HttpServletRequest req) {
+        log.warn("[408] {} | errorCode=REQUEST_TIMEOUT | internalDetail={}",
+                requestContext(req), ex.getMessage());
+
+        return ApiError.of(408, AppErrorCode.REQUEST_TIMEOUT,
+                "The request timed out, please try again", traceId());
+    }
+
+    // ── 5xx handler (log.error — our fault, WITH full stack trace) ─
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ProblemDetail> handleGeneral(Exception ex) {
-        log.error("Unhandled exception", ex);
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
-        problem.setTitle("Internal Server Error");
-        problem.setType(URI.create("https://findutabs.com/errors/internal"));
-        problem.setProperty("timestamp", Instant.now());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problem);
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiError handleUnexpected(Exception ex, HttpServletRequest req) {
+        log.error("[500] {} | errorCode=INTERNAL_SERVER_ERROR | exceptionClass={} | message={}",
+                requestContext(req),
+                ex.getClass().getName(),
+                ex.getMessage(),
+                ex);
+
+        return ApiError.of(500, AppErrorCode.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred. Please try again later.", traceId());
     }
 }

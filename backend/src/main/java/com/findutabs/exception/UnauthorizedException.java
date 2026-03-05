@@ -1,7 +1,10 @@
 package com.findutabs.exception;
 
-public class UnauthorizedException extends RuntimeException {
-    public UnauthorizedException(String message) {
-        super(message);
+import org.springframework.http.HttpStatus;
+
+public class UnauthorizedException extends AppException {
+    public UnauthorizedException(String internalDetail) {
+        super(AppErrorCode.UNAUTHORIZED, HttpStatus.UNAUTHORIZED,
+              "Authentication is required to access this resource", internalDetail);
     }
 }
