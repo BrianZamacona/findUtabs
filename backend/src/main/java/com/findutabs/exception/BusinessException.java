@@ -1,14 +1,18 @@
 package com.findutabs.exception;
 
-public class BusinessException extends RuntimeException {
-    private final String errorCode;
+import org.springframework.http.HttpStatus;
 
-    public BusinessException(String message, String errorCode) {
-        super(message);
-        this.errorCode = errorCode;
+public class BusinessException extends AppException {
+    public BusinessException(String message) {
+        super(AppErrorCode.BUSINESS_RULE_VIOLATION, HttpStatus.BAD_REQUEST, message);
     }
 
-    public String getErrorCode() {
-        return errorCode;
+    // Handles both (clientMessage, internalDetail) and legacy (message, errorCode) callers
+    public BusinessException(String clientMessage, String internalDetail) {
+        super(AppErrorCode.BUSINESS_RULE_VIOLATION, HttpStatus.BAD_REQUEST, clientMessage, internalDetail);
     }
+
+    // Returns the error code name as a String for legacy compatibility.
+    // Use getErrorCode().name() on AppException for new code.
+    public String getErrorCodeName() { return AppErrorCode.BUSINESS_RULE_VIOLATION.name(); }
 }

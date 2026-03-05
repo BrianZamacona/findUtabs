@@ -1,7 +1,10 @@
 package com.findutabs.exception;
 
-public class DuplicateResourceException extends BusinessException {
-    public DuplicateResourceException(String message) {
-        super(message, "DUPLICATE_RESOURCE");
+import org.springframework.http.HttpStatus;
+
+public class DuplicateResourceException extends AppException {
+    public DuplicateResourceException(String internalDetail) {
+        super(AppErrorCode.DUPLICATE_RESOURCE, HttpStatus.CONFLICT,
+              "The resource already exists", internalDetail);
     }
 }

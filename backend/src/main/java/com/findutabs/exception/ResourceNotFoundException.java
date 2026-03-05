@@ -1,7 +1,10 @@
 package com.findutabs.exception;
 
-public class ResourceNotFoundException extends RuntimeException {
-    public ResourceNotFoundException(String message) {
-        super(message);
+import org.springframework.http.HttpStatus;
+
+public class ResourceNotFoundException extends AppException {
+    public ResourceNotFoundException(String internalDetail) {
+        super(AppErrorCode.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND,
+              "The requested resource was not found", internalDetail);
     }
 }
