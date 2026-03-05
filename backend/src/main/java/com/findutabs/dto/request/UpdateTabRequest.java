@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateTabRequest {
+public class UpdateTabRequest {
 
     @NotBlank(message = "Title is required")
     private String title;
@@ -19,9 +19,9 @@ public class CreateTabRequest {
 
     private Tab.Difficulty difficulty;
 
-    private String tuning = "Standard";
-
-    private String fileUrl;
+    private String tuning;
 
     private String alphaTexData;
+
+    private String changeNotes;
 }

@@ -49,6 +49,9 @@ public class Tab {
     @Column(nullable = false)
     private Integer views = 0;
 
+    @Column(name = "alpha_tex_data", columnDefinition = "TEXT")
+    private String alphaTexData;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
