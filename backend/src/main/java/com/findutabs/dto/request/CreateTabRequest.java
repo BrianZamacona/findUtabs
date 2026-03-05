@@ -22,4 +22,6 @@ public class CreateTabRequest {
     private String tuning = "Standard";
 
     private String fileUrl;
+
+    private String alphaTexData;
 }

@@ -17,6 +17,9 @@ export interface Tab {
   views: number;
   createdAt: string;
   updatedAt: string;
+  alphaTexData?: string;
+  averageRating?: number;
+  ratingCount?: number;
 }
 
 export interface CreateTabRequest {
@@ -25,6 +28,7 @@ export interface CreateTabRequest {
   difficulty?: Difficulty;
   tuning?: string;
   fileUrl?: string;
+  alphaTexData?: string;
 }
 
 export type SourceType = 'YOUTUBE' | 'SPOTIFY' | 'TIDAL' | 'FILE_UPLOAD' | 'URL';
@@ -60,4 +64,39 @@ export interface CreateSongRequest {
   sourceType: SourceType;
   title?: string;
   artist?: string;
+}
+
+export interface UpdateTabRequest {
+  title: string;
+  artist: string;
+  difficulty?: Difficulty;
+  tuning?: string;
+  alphaTexData?: string;
+  changeNotes?: string;
+}
+
+export interface TabRatingRequest {
+  rating: number;
+  comment?: string;
+}
+
+export interface TabRating {
+  id: number;
+  tabId: number;
+  userId: number;
+  username: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+}
+
+export interface TabVersion {
+  id: number;
+  tabId: number;
+  versionNumber: number;
+  alphaTexData?: string;
+  changeNotes?: string;
+  createdById: number;
+  createdByUsername: string;
+  createdAt: string;
 }

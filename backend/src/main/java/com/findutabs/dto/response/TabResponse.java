@@ -19,7 +19,10 @@ public class TabResponse {
     private Long userId;
     private String username;
     private String fileUrl;
+    private String alphaTexData;
     private Integer views;
+    private Double averageRating;
+    private Long ratingCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

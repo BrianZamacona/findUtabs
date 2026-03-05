@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { Tab, CreateTabRequest } from '@/types/tab';
+import { Tab, CreateTabRequest, UpdateTabRequest, TabVersion, TabRating, TabRatingRequest } from '@/types/tab';
 import { PaginatedResponse } from '@/types/api';
 
 export const useAllTabs = (page = 0, size = 20, sort?: string) => {
@@ -117,6 +117,84 @@ export const useTopTabs = () => {
     queryKey: ['tabs', 'top'],
     queryFn: async () => {
       const { data } = await api.get<Tab[]>('/tabs/top');
+      return data;
+    },
+  });
+};
+
+export const useUpdateTab = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: UpdateTabRequest }) => {
+      const { data: response } = await api.put<Tab>(`/tabs/${id}`, data);
+      return response;
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['tab', id] });
+      queryClient.invalidateQueries({ queryKey: ['tabs'] });
+    },
+  });
+};
+
+export const useTabVersions = (tabId: number) => {
+  return useQuery({
+    queryKey: ['tab', tabId, 'versions'],
+    queryFn: async () => {
+      const { data } = await api.get<TabVersion[]>(`/tabs/${tabId}/versions`);
+      return data;
+    },
+    enabled: !!tabId,
+  });
+};
+
+export const useTabRatings = (tabId: number) => {
+  return useQuery({
+    queryKey: ['tab', tabId, 'ratings'],
+    queryFn: async () => {
+      const { data } = await api.get<TabRating[]>(`/tabs/${tabId}/ratings`);
+      return data;
+    },
+    enabled: !!tabId,
+  });
+};
+
+export const useRateTab = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ tabId, data }: { tabId: number; data: TabRatingRequest }) => {
+      const { data: response } = await api.post<TabRating>(`/tabs/${tabId}/ratings`, data);
+      return response;
+    },
+    onSuccess: (_, { tabId }) => {
+      queryClient.invalidateQueries({ queryKey: ['tab', tabId, 'ratings'] });
+      queryClient.invalidateQueries({ queryKey: ['tab', tabId] });
+    },
+  });
+};
+
+export const useToggleFavorite = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (tabId: number) => {
+      const { data } = await api.post<{ favorite: boolean }>(`/tabs/${tabId}/favorite`);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tabs', 'favorites'] });
+    },
+  });
+};
+
+export const useUserFavorites = (page = 0, size = 20) => {
+  return useQuery({
+    queryKey: ['tabs', 'favorites', page, size],
+    queryFn: async () => {
+      const { data } = await api.get<PaginatedResponse<Tab>>('/tabs/favorites', {
+        params: { page, size },
+      });
       return data;
     },
   });

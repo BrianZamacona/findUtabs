@@ -1,7 +1,11 @@
 package com.findutabs.controller;
 
 import com.findutabs.dto.request.CreateTabRequest;
+import com.findutabs.dto.request.TabRatingRequest;
+import com.findutabs.dto.request.UpdateTabRequest;
+import com.findutabs.dto.response.TabRatingResponse;
 import com.findutabs.dto.response.TabResponse;
+import com.findutabs.dto.response.TabVersionResponse;
 import com.findutabs.service.TabService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -18,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/tabs")
@@ -34,6 +39,16 @@ public class TabController {
                                                   Authentication authentication) {
         String username = authentication.getName();
         return ResponseEntity.status(HttpStatus.CREATED).body(tabService.createTab(request, username));
+    }
+
+    @PutMapping("/{id}")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Update a tab (owner only)")
+    public ResponseEntity<TabResponse> updateTab(@PathVariable Long id,
+                                                  @Valid @RequestBody UpdateTabRequest request,
+                                                  Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(tabService.updateTab(id, request, username));
     }
 
     @GetMapping("/{id}")
@@ -97,5 +112,49 @@ public class TabController {
         String username = authentication.getName();
         tabService.deleteTab(id, username);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/versions")
+    @Operation(summary = "Get version history of a tab")
+    public ResponseEntity<List<TabVersionResponse>> getTabVersions(@PathVariable Long id) {
+        return ResponseEntity.ok(tabService.getTabVersions(id));
+    }
+
+    @PostMapping("/{id}/ratings")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Rate a tab")
+    public ResponseEntity<TabRatingResponse> rateTab(@PathVariable Long id,
+                                                      @Valid @RequestBody TabRatingRequest request,
+                                                      Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(tabService.rateTab(id, request, username));
+    }
+
+    @GetMapping("/{id}/ratings")
+    @Operation(summary = "Get ratings for a tab")
+    public ResponseEntity<List<TabRatingResponse>> getTabRatings(@PathVariable Long id) {
+        return ResponseEntity.ok(tabService.getTabRatings(id));
+    }
+
+    @PostMapping("/{id}/favorite")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Toggle favorite for a tab")
+    public ResponseEntity<Map<String, Boolean>> toggleFavorite(@PathVariable Long id,
+                                                               Authentication authentication) {
+        String username = authentication.getName();
+        boolean isFavorite = tabService.toggleFavorite(id, username);
+        return ResponseEntity.ok(Map.of("favorite", isFavorite));
+    }
+
+    @GetMapping("/favorites")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Get current user's favorite tabs")
+    public ResponseEntity<Page<TabResponse>> getUserFavorites(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication authentication) {
+        String username = authentication.getName();
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return ResponseEntity.ok(tabService.getUserFavorites(username, pageable));
     }
 }
