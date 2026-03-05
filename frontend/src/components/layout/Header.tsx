@@ -41,7 +41,7 @@ export function Header() {
                 </Link>
               )}
               <Link href="/support">
-                <Button variant="ghost" className="text-orange-500">☕ Support</Button>
+                <Button variant="ghost" className="text-orange-500" aria-label="Support Us"><span aria-hidden="true">☕</span> Support</Button>
               </Link>
               <span className="text-sm text-muted-foreground hidden sm:block">
                 {user?.username}
@@ -53,7 +53,7 @@ export function Header() {
           ) : (
             <>
               <Link href="/support">
-                <Button variant="ghost" className="text-orange-500">☕ Support</Button>
+                <Button variant="ghost" className="text-orange-500" aria-label="Support Us"><span aria-hidden="true">☕</span> Support</Button>
               </Link>
               <Link href="/login">
                 <Button variant="ghost">Login</Button>

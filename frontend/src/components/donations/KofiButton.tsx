@@ -40,8 +40,9 @@ export function KofiButton({
           rel="noopener noreferrer"
           className="flex items-center gap-2 px-4 py-3 rounded-full shadow-lg text-white font-medium text-sm transition-transform hover:scale-105"
           style={{ backgroundColor: color }}
+          aria-label={label}
         >
-          ☕ {label}
+          <span aria-hidden="true">☕</span> {label}
         </a>
       </div>
     );
@@ -54,8 +55,9 @@ export function KofiButton({
       rel="noopener noreferrer"
       className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-white font-medium text-sm transition-opacity hover:opacity-90"
       style={{ backgroundColor: color }}
+      aria-label={label}
     >
-      ☕ {label}
+      <span aria-hidden="true">☕</span> {label}
     </a>
   );
 }
